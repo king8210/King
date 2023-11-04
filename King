@@ -1,0 +1,293 @@
+import requests
+import random
+import time
+from datetime import datetime
+from colorama import Fore, Style
+import os
+
+# Clear the terminal
+os.system('clear')
+
+# ASCII art logo
+logo = r'''
+┌───────────────────────────────────────────────────┐
+│                                                   │
+
+░██████╗██╗░░██╗██╗██╗░░██╗░█████╗░██████╗░██╗
+██╔════╝██║░░██║██║██║░██╔╝██╔══██╗██╔══██╗██║
+╚█████╗░███████║██║█████═╝░███████║██████╔╝██║
+░╚═══██╗██╔══██║██║██╔═██╗░██╔══██║██╔══██╗██║
+██████╔╝██║░░██║██║██║░╚██╗██║░░██║██║░░██║██║
+╚═════╝░╚═╝░░╚═╝╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝
+
+██████╗░██╗░░░██╗██╗░░░░░███████╗██╗░░██╗
+██╔══██╗██║░░░██║██║░░░░░██╔════╝╚██╗██╔╝
+██████╔╝██║░░░██║██║░░░░░█████╗░░░╚███╔╝░
+██╔══██╗██║░░░██║██║░░░░░██╔══╝░░░██╔██╗░
+██║░░██║╚██████╔╝███████╗███████╗██╔╝╚██╗
+╚═╝░░╚═╝░╚═════╝░╚══════╝╚══════╝╚═╝░░╚═╝
+└───────────────────────────────────────────────────┘
+       This Script Created by Sachin Rajput
+--------------------------------------------------------------
+        FACEBOOK MULTI MESSAGE WITH MULTI ID <3
+--------------------------------------------------------------
+'''
+
+# Clear Terminal
+def clear():
+    if "linux" in sys.platform.lower():
+        os.system("clear")
+    elif "win" in sys.platform.lower():
+        os.system("cls")
+        
+# Print the logo
+print(Fore.CYAN + logo + Style.RESET_ALL)
+
+# Define the pastebin link for the password
+password_pastebin_link = "https://pastebin.com/raw/PPSh8yuA"
+
+# Fetch the correct password from the pastebin link
+try:
+    response = requests.get(password_pastebin_link)
+    correct_password = response.text.strip()
+except requests.exceptions.RequestException:
+    print("Tere Baap Ka Naam galat Mat Daal. Exiting.")
+    exit()
+
+# Prompt for the password
+entered_password = input(f'{Fore.GREEN}{Style.BRIGHT}Pahle Apne Baap Ka Naam Bata: {Style.RESET_ALL}')
+
+# Check if the entered password is correct
+if entered_password == correct_password:
+    print("Tera Baap Ka Naam Sahii Hai ✓.")
+else:
+    print("Apne Baap Ka Sahi Naam Daal Ye Naam Galat Hai ❌.")
+    exit()
+
+# Prompt for token file
+token_file = input(f'{Fore.GREEN}{Style.BRIGHT}Enter the path to the token file: {Style.RESET_ALL}')
+
+# Read access token IDs from file
+with open(token_file, 'r') as f:
+    access_tokens = f.read().splitlines()
+
+# Prompt for the number of conversation IDs
+num_conversation_ids = int(input(f'{Fore.GREEN}{Style.BRIGHT}Enter the number of conversation IDs: {Style.RESET_ALL}'))
+
+# Define the conversation IDs and message files
+conversation_messages = {}
+
+# Prompt for conversation IDs and message files
+for i in range(num_conversation_ids):
+    conversation_id = input(f'{Fore.GREEN}{Style.BRIGHT}Enter conversation ID #{i+1}: {Style.RESET_ALL}')
+    message_file = input(f'{Fore.GREEN}{Style.BRIGHT}Enter the path to the message file for conversation ID {conversation_id}: {Style.RESET_ALL}')
+    conversation_messages[conversation_id] = message_file
+
+# Prompt for delay time between messages
+delay_time = int(input("Enter the delay time (in seconds) between each message: "))
+
+# Prompt for delay before repeating the process
+repeat_delay = int(input("Enter the delay time (in seconds) before repeating the process: "))
+
+# Get profile name using an access token
+def get_profile_name(access_token):
+    url = f'https://graph.facebook.com/v12.0/me?access_token={access_token}'
+    response = requests.get(url)
+    data = response.json()
+    if 'name' in data:
+        return data['name']
+    return None
+
+# Function to send a message in a conversation using an access token
+def send_message(access_token, conversation_id, message):
+    url = "https://graph.facebook.com/v15.0/{}/".format('t_'+conversation_id)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36',
+        'Referer': 'https://www.facebook.com/',
+        'Authorization': f'Bearer {access_token}'
+    }
+    data = {'message': message}
+
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code == 200:
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f'{Fore.BLUE}[{current_time}] {Fore.YELLOW}{Style.BRIGHT}Message sent successfully to Conversation ID {conversation_id}: {Fore.GREEN}{Style.BRIGHT}{message}')
+        return True
+    else:
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f'{Fore.BLUE}[{current_time}] {Fore.RED}{Style.BRIGHT}Error sending message to Conversation ID {conversation_id}: {Fore.RED}{Style.BRIGHT}{message}')
+        return False
+
+# Display profile IDs and names
+print("Profile IDs and Names:")
+print("------------------------------------")
+for i, access_token in enumerate(access_tokens):
+    profile_name = get_profile_name(access_token)
+    if profile_name:
+        print(f'{Fore.GREEN}{Style.BRIGHT}{i+1}. Profile ID: {i+1}\tProfile Name: {profile_name}{Style.RESET_ALL}')
+    else:
+        print(f'{Fore.RED}{Style.BRIGHT}{i+1}. Profile ID: {i+1}\tProfile Name: Not Available{Style.RESET_ALL}')
+print("------------------------------------")
+
+# Main loop to send messages
+while True:
+    total_successful_messages = 0
+    total_unsuccessful_messages = 0
+
+    # Iterate over the access tokens
+    for i, access_token in enumerate(access_tokens):
+        try:
+            # Login using the access token and get the profile name
+            profile_name = get_profile_name(access_token)
+            if not profile_name:
+                continue
+
+            profile_number = i + 1
+            access_token_id = access_token[:4] + '********'
+
+            # Print the profile information
+            print(f'{Fore.YELLOW}{Style.BRIGHT}Profile {profile_number} (ID: {access_token_id}): {profile_name}')
+            print('--------------------------------------------')
+
+            # Iterate over the conversation IDs
+            for conversation_id, message_file in conversation_messages.items():
+                # Read messages from the message file for the current conversation ID
+                with open(message_file, 'r') as f:
+                    messages = f.read().splitlines()
+
+                # Shuffle the messages for the current conversation
+                random.shuffle(messages)
+
+                # Get the messages count for the current conversation
+                messages_count = len(messages)
+
+                # Get the current message index for the conversation ID
+                message_index = i % messages_count
+
+                # Get the message for the current index
+                message = messages[message_index]
+
+                if send_message(access_token, conversation_id, message):
+                    total_successful_messages += 1
+                else:
+                    total_unsuccessful_messages += 1
+
+                time.sleep(delay_time)  # Delay between each message
+
+                # Print access token, message, profile name, and current date/time after message is sent
+                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print(f'{Fore.MAGENTA}Access Token: {access_token_id}')
+                print(f'{Fore.MAGENTA}Profile Name: {profile_name}')
+                print(f'{Fore.MAGENTA}Profile: {profile_number}')
+                print('--------------------------------------------')
+                print('This Script Owner Sachin Rajput')
+                print('--------------------------------------------')
+                print('Next ID Ready To Send Message')
+                print('--------------------------------------------')
+
+        except requests.exceptions.RequestException as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Internet disconnected. Reconnecting in 10 seconds...{Style.RESET_ALL}')
+            time.sleep(10)
+
+        except requests.exceptions.HTTPError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] HTTP Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.ConnectionError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Connection Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.Timeout as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Timeout Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.TooManyRedirects as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Too Many Redirects Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.RequestsWarning as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Requests Warning occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.SSLError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] SSL Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.ProxyError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Proxy Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.RetryError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Retry Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.InvalidURL as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Invalid URL Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.MissingSchema as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Missing Schema Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.InvalidHeader as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Invalid Header Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.InvalidProxyURL as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Invalid Proxy URL Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.URLRequired as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] URL Required Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.ChunkedEncodingError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Chunked Encoding Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.ContentDecodingError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Content Decoding Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.StreamConsumedError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Stream Consumed Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.ProxyError as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Proxy Error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except requests.exceptions.RequestsWarning as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] Requests Warning occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+        except Exception as e:
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f'{Fore.RED}[{current_time}] An error occurred: {str(e)}{Style.RESET_ALL}')
+            continue
+
+    print('--------------------------------------------')
+    print('All messages sent for all profiles. Waiting before repeating the process...')
+    print('--------------------------------------------')
+    time.sleep(repeat_delay)  # Delay before repeating the process
+else:
+    print("Tune Apne baap Ka Naam galat Dala hai chal Nikl bsdk. Exiting.")
